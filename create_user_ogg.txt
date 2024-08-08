@@ -1,0 +1,53 @@
+echo './create_user_ogg.sh oggadmin1 Oracle123 USERS TEMP OGG'
+name=$1
+pass=$2
+tbs=$3
+temp_tbs=$4
+PDB=$5
+if [ -z "$PDB" ]; then
+	var="\
+CREATE USER c##$name IDENTIFIED BY $pass CONTAINER=all DEFAULT TABLESPACE $tbs TEMPORARY TABLESPACE $temp_tbs;\n\
+GRANT RESOURCE to c##$name;\n\
+GRANT CREATE SESSION to c##$name;\n\
+GRANT CREATE VIEW to c##$name;\n\
+GRANT CREATE TABLE to c##$name;\n\
+GRANT CONNECT to c##$name CONTAINER=all;\n\
+–- for data vault user\n\
+--GRANT DV_GOLDENGATE_ADMIN;\n\
+--GRANT DV_GOLDENGATE_REDO_ACCESS;\n\
+–- for data vault user\n\
+GRANT ALTER SYSTEM to c##$name;\n\
+GRANT ALTER USER to c##$name;\n\
+ALTER USER c##$name SET CONTAINER_DATA=all CONTAINER=current;\n\
+ALTER USER c##$name QUOTA unlimited ON $tbs;\n\
+GRANT SELECT ANY DICTIONARY to c##$name;\n\
+GRANT SELECT ANY TRANSACTION to c##$name;\n\
+EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('c##$name', CONTAINER => 'ALL');\n\
+"
+else
+	var="\
+CREATE USER $name IDENTIFIED BY $pass DEFAULT TABLESPACE $tbs TEMPORARY TABLESPACE $temp_tbs;\n\
+GRANT RESOURCE to $name;\n\
+GRANT CREATE SESSION to $name;\n\
+GRANT CREATE VIEW to $name;\n\
+GRANT CREATE TABLE to $name;\n\
+GRANT CONNECT to $name;\n\
+–- for data vault user\n\
+--GRANT DV_GOLDENGATE_ADMIN;\n\
+--GRANT DV_GOLDENGATE_REDO_ACCESS;\n\
+–- for data vault user\n\
+GRANT ALTER SYSTEM to $name;\n\
+GRANT ALTER USER to $name;\n\
+--ALTER USER $name SET CONTAINER_DATA=all CONTAINER=current;\n\
+ALTER USER $name QUOTA unlimited ON $tbs;\n\
+GRANT SELECT ANY DICTIONARY to $name;\n\
+GRANT SELECT ANY TRANSACTION to $name;\n\
+EXEC DBMS_GOLDENGATE_AUTH.GRANT_ADMIN_PRIVILEGE('$name');\n\
+"
+fi
+echo $name $pass $tbs $temp_tbs $PDB
+
+echo -e "$var" > "$PWD/user_ogg.sql"
+
+./create_user_ogg.sh oggadmin1 Oracle123 USERS TEMP OGG
+
